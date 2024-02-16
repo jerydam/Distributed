@@ -1,33 +1,55 @@
 // The 'ajo' program.
 program ajo.aleo {
-
-    record ajo {
+     mapping balances: field => u64;
+    
+    record user_record {
         owner: address;
         amount: u64;
         id_assigned: bool;
+        user: address;
        
     }
-   struct Register {
-    expected_amount: u16,
-    expected_number: u16,
-    day_range: u16,
-}
+   
 
-transition create_ajo(expected_amount: u16, expected_number: u16, day_range: u16) -> Register {
-    let registration: Register = Register {
-        expected_amount,
-        expected_number,
-        day_range,
-    };
-   return registration;
+record Token {
+    owner: address,
+    amount: u64,
+    
 }
+ function only_owner (owner: address) -> address {
+    
+  assert_eq(self.caller, owner );
+  return owner;
+ }
 
- transition join_ajo(req_amount: u16, req_number: u16) -> Register {
-    let registration: Register = create_ajo( expected_amount: u16, expected_number: u16, day_range: u16);
 
-    require(req_amount == registration.expected_amount, "Amount too low");
-    require(req_number == registration.expected_number, "Limit exceeded");
-    require(time.blockstamp > day_range, "Registration time expired");
-   return registration;
+ transition deposit(token: Token, amount: u64) -> Token {
+        let difference: u64 = token.amount - amount;
+
+        let remaining: Token = Token {
+            owner: token.owner,
+            amount: difference,
+        };
+         let hash: field = BHP256::hash_to_field(token.owner);
+         return remaining then finalize(hash, amount);
+
+
+ }
+ 
+
+ finalize deposit(hash: field, amount: u64) {
+        let current_amount: u64 = Mapping::get_or_use(balances, hash, 0u64);
+        Mapping::set(balances, hash, current_amount + amount);
 }
+ 
+ transition ajo ( user: address, amount: u64) -> user_record {
+        assert_eq(self.caller,user );
+       
+        return user_record {
+            owner: aleo1fxs9s0w97lmkwlcmgn0z3nuxufdee5yck9wqrs0umevp7qs0sg9q5xxxzh,
+            amount: amount,
+            id_assigned: true,
+            user: user,
+          };
+ }
 }
