@@ -22,7 +22,6 @@ record Token {
   return owner;
  }
 
-
  transition deposit(token: Token, amount: u64) -> Token {
         let difference: u64 = token.amount - amount;
 
