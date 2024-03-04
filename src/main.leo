@@ -1,6 +1,6 @@
 // The 'ajo' program.
 program ajo.aleo {
-     mapping balances: field => u64;
+   mapping balances: field => u64;
     
     record user_record {
         owner: address;
@@ -22,7 +22,7 @@ record Token {
   return owner;
  }
 
- transition deposit(token: Token, amount: u64) -> Token {
+ transition donate(token: Token, amount: u64) -> Token {
         let difference: u64 = token.amount - amount;
 
         let remaining: Token = Token {
@@ -36,19 +36,39 @@ record Token {
  }
  
 
- finalize deposit(hash: field, amount: u64) {
+ finalize donate(hash: field, amount: u64) {
         let current_amount: u64 = Mapping::get_or_use(balances, hash, 0u64);
         Mapping::set(balances, hash, current_amount + amount);
 }
  
- transition ajo ( user: address, amount: u64) -> user_record {
+ transition ajo ( user: address, amount: u64, this: address ) -> user_record {
         assert_eq(self.caller,user );
        
         return user_record {
-            owner: aleo1fxs9s0w97lmkwlcmgn0z3nuxufdee5yck9wqrs0umevp7qs0sg9q5xxxzh,
+            owner: this,
             amount: amount,
             id_assigned: true,
             user: user,
           };
  }
-}
+   
+    transition withdraw(recipient: address, total: u64, this:address) -> Token {
+        assert_eq(self.caller, this);
+        let hash: field = BHP256::hash_to_field(recipient);
+
+        let token: Token = Token {
+            owner: recipient,
+            amount: total,
+        };
+
+        return token then finalize(hash, total);
+    }
+
+   
+    finalize withdraw(hash: field, amount: u64) {
+        let current_amount: u64 = Mapping::get_or_use(balances, hash, 0u64);
+        Mapping::set(balances, hash, current_amount - amount);
+    }
+
+    }
+
