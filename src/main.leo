@@ -16,12 +16,6 @@ record Token {
     amount: u64,
     
 }
- function only_owner (owner: address) -> address {
-    
-  assert_eq(self.caller, owner );
-  return owner;
- }
-
  transition donate(token: Token, amount: u64) -> Token {
         let difference: u64 = token.amount - amount;
 
@@ -41,7 +35,7 @@ record Token {
         Mapping::set(balances, hash, current_amount + amount);
 }
  
- transition ajo ( user: address, amount: u64, this: address ) -> user_record {
+ transition join_ajo ( user: address, amount: u64, this: address ) -> user_record {
         assert_eq(self.caller,user );
        
         return user_record {
@@ -49,7 +43,7 @@ record Token {
             amount: amount,
             id_assigned: true,
             user: user,
-          };
+          };    
  }
    
     transition withdraw(recipient: address, total: u64, this:address) -> Token {
